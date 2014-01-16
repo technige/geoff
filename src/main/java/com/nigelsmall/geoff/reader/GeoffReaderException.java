@@ -20,8 +20,8 @@ import java.io.IOException;
 
 public class GeoffReaderException extends IOException {
 
-    public GeoffReaderException(String message) {
-        super(message);
+    public GeoffReaderException(String message, int lineNo, int column) {
+        super(message+" at line "+lineNo+" column "+column);
     }
 
 }
