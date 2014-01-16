@@ -17,7 +17,7 @@ reverse_path   := "<-" relationship "-" node
 two_way_path   := "<-" relationship "->" node
 
 node           := named_node | anonymous_node
-named_node     := "(" ~ node_name [_ label_list] [_ property_map] ~ ")"
+named_node     := "(" ~ node_name [label_list] [_ property_map] ~ ")"
 anonymous_node := "(" ~ [label_list] [_ property_map] ~ ")"
 relationship   := "[" ~ ":" type ["!" [key]] [_ property_map] ~ "]"
 label_list     := ":" label ["!" key] (":" label)*
