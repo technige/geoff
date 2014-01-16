@@ -6,6 +6,8 @@
 
 ##Usage
 
+The code below gives a quick example of usage.
+
 ```java
 // Set up a GeoffReader from any Reader object
 GeoffReader geoffReader = new GeoffReader(reader);
