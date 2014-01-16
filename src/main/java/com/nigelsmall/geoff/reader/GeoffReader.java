@@ -32,6 +32,8 @@ import java.util.*;
 public class GeoffReader {
 
     final private Logger logger = LoggerFactory.getLogger(GeoffReader.class);
+    private int lineNo;
+    private int column;
 
     final private static class UnexpectedEndOfData extends IOException {}
 
@@ -52,9 +54,10 @@ public class GeoffReader {
         this(new StringReader(string));
     }
 
-    private Character read() throws IOException {
+    private char read() throws IOException {
         int ch;
         if (this.peeked == NULL) {
+            column++;
             ch = this.reader.read();
         } else {
             ch = this.peeked;
@@ -68,6 +71,7 @@ public class GeoffReader {
 
     private Character peek() throws IOException {
         if (this.peeked == NULL) {
+            column++;
             this.peeked = this.reader.read();
         }
         if (this.peeked == END_OF_DATA) {
@@ -81,8 +85,13 @@ public class GeoffReader {
         if (this.nextCharEquals(ch)) {
             return this.read();
         } else {
-            throw new GeoffReaderException("Unexpected character");
+            String msg = "Unexpected character";
+            throw error(msg);
         }
+    }
+
+    private GeoffReaderException error(String msg) {
+        return new GeoffReaderException(msg,lineNo,column-1);
     }
 
     private String readUntil(char terminator) throws IOException {
@@ -170,7 +179,7 @@ public class GeoffReader {
             this.readChar(']');
             return items;
         } else {
-            throw new GeoffReaderException("Disarray");
+            throw error("Disarray");
         }
     }
 
@@ -188,7 +197,7 @@ public class GeoffReader {
                 return "-";
             }
         } else {
-            throw new GeoffReaderException("Broken arrow");
+            throw error("Broken arrow");
         }
     }
 
@@ -207,7 +216,7 @@ public class GeoffReader {
             readChar('e');
             return false;
         } else {
-            throw new GeoffReaderException("Cannot establish truth");
+            throw error("Cannot establish truth");
         }
     }
 
@@ -418,7 +427,7 @@ public class GeoffReader {
         try {
             return mapper.readValue(s.toString(), String.class);
         } catch (IOException e) {
-            throw new GeoffReaderException("Unable to parse JSON string");
+            throw error("Unable to parse JSON string");
         }
     }
 
@@ -438,7 +447,7 @@ public class GeoffReader {
             } else if (listValue.get(0) instanceof Boolean) {
                 value = listValue.toArray(new Boolean[listValueSize]);
             } else {
-                throw new GeoffReaderException("Unexpected array type");
+                throw error("Unexpected array type");
             }
         } else if (this.nextCharEquals('"')) {
             value = this.readString();
@@ -453,7 +462,7 @@ public class GeoffReader {
             this.readChar('l');
             value = null;
         } else {
-            throw new GeoffReaderException("Unexpected character");
+            throw error("Unexpected character");
         }
         return value;
     }
@@ -461,7 +470,12 @@ public class GeoffReader {
     public String readWhitespace() throws IOException {
         StringBuilder builder = new StringBuilder(20);
         while (this.hasMore() && Character.isWhitespace(this.peek())) {
-            builder.append(this.read());
+            char ch = this.read();
+            builder.append(ch);
+            if (ch == '\n') {
+                lineNo ++;
+                column = 0;
+            }
         }
         return builder.toString();
     }
@@ -482,7 +496,7 @@ public class GeoffReader {
                     String arrow2 = this.readArrow();
                     AbstractNode otherNode = this.readNode();
                     if ("-".equals(arrow1) && "-".equals(arrow2)) {
-                        throw new GeoffReaderException("Lack of direction");
+                        throw error("Lack of direction");
                     }
                     if ("<-".equals(arrow1)) {
                         relationships.add(new AbstractRelationship(otherNode, rel.getType(), rel.getProperties(), node, rel.isUnique()));
@@ -530,7 +544,7 @@ public class GeoffReader {
                 this.readBoundary();
                 endOfSubgraph = true;
             } else if(this.hasMore()) {
-                throw new GeoffReaderException("Unexpected character " + this.peek());
+                throw error("Unexpected character " + this.peek());
             }
             this.readWhitespace();
         }
