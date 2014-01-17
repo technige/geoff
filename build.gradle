@@ -1,6 +1,7 @@
 apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
@@ -23,6 +24,20 @@ version = '0.5.0'
 jar {
     manifest {
         attributes 'Implementation-Title': 'geoff', 'Implementation-Version': version
+    }
+}
+
+// gradle publishMavenJavaPublicationToMavenRepository
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            url "../m2/releases"
+        }
     }
 }
 
